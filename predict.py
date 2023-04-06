@@ -25,7 +25,7 @@ import io
 import pydantic
 
 
-def predict(img, effect):
+def predict(img, effect=['circle']):
   config = yaml.safe_load(open("argument.yml", "r"))
   config["offscreen_rendering"] = True
   config["src_folder"] = 'input'
