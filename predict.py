@@ -203,7 +203,7 @@ class ImageData(pydantic.BaseModel):
 def create_upload_image(image: UploadFile = File(...)):
     image_bytes = image.file.read()
 
-    img_array = np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB")).astype(np.uint8)
+    img_array = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     print("img array shape", img_array.shape)
 
     out = predict(img_array)
