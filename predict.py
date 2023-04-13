@@ -157,8 +157,6 @@ def predict_(img, effect='circle'):
   down, right = top + config["output_h"], left + config["output_w"]
   border = [int(xx) for xx in [top, down, left, right]]
 
-  output_path = os.path.join(config["video_folder"], video_basename[0] + '_' + effect + '.mp4')
-  
   generic_pose = np.eye(4)
   tgt_pose = [[generic_pose * 1]]
   tgts_poses = []
@@ -171,8 +169,9 @@ def predict_(img, effect='circle'):
           tgt_poses[-1][:3, -1] = np.array([xx, yy, zz])
       tgts_poses += [tgt_poses]    
   tgt_pose = generic_pose * 1
-  videos_poses, video_basename = copy.deepcopy(tgt_pose), 'image'
-  
+  videos_poses, video_basename = copy.deepcopy(tgts_poses), 'image'
+  output_path = os.path.join(config["video_folder"], 'image_' + effect + '.mp4')
+
   normal_canvas, all_canvas = None, None
   normal_canvas, all_canvas = output_3d_photo(
       verts.copy(),
@@ -327,6 +326,9 @@ def predict(img, effect='circle'):
       border = [int(xx) for xx in [top, down, left, right]]
 
       output_path = os.path.join(config["video_folder"], video_basename[0] + '_' + effect + '.mp4')
+      
+      print("ref_pose shape: ",sample["ref_pose"].shape)
+
       normal_canvas, all_canvas = output_3d_photo(
           verts.copy(),
           colors.copy(),
@@ -366,6 +368,6 @@ async def create_upload_image(image: UploadFile = File(...)):
     image_bytes = image.file.read()
     img_array = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     out = predict_(img_array)
-    # out = predict(img_array)
+    #out = predict(img_array)
     
     return out
