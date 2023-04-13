@@ -73,7 +73,6 @@ def predict_(img, effect='circle'):
   os.makedirs(config["mesh_folder"], exist_ok=True)
   os.makedirs(config["video_folder"], exist_ok=True)
   
-  
   traj_types_dict = {"dolly-zoom-in": "double-straight-line",
                            'zoom-in': 'double-straight-line',
                            'circle': 'circle',
@@ -153,7 +152,6 @@ def predict_(img, effect='circle'):
   verts, colors, faces, Height, Width, hFov, vFov = rt_info
 
   print(f"Making video at {time.time()}")
-  videos_poses, video_basename = effect, 'image'
   top = config.get("original_h") // 2 - int_mtx[1, 2] * config["output_h"]
   left = config.get("original_w") // 2 - int_mtx[0, 2] * config["output_w"]
   down, right = top + config["output_h"], left + config["output_w"]
@@ -173,7 +171,7 @@ def predict_(img, effect='circle'):
           tgt_poses[-1][:3, -1] = np.array([xx, yy, zz])
       tgts_poses += [tgt_poses]    
   tgt_pose = generic_pose * 1
-  ref_pose= np.eye(4)
+  videos_poses, video_basename = copy.deepcopy(tgt_pose), 'image'
   
   normal_canvas, all_canvas = None, None
   normal_canvas, all_canvas = output_3d_photo(
@@ -186,7 +184,7 @@ def predict_(img, effect='circle'):
       copy.deepcopy(vFov),
       copy.deepcopy(tgt_pose),
       config['video_postfix'],
-      copy.deepcopy(ref_pose),
+      copy.deepcopy(generic_pose),
       copy.deepcopy(config["video_folder"]),
       image.copy(),
       copy.deepcopy(int_mtx),
