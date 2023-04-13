@@ -21,6 +21,7 @@ from MiDaS.monodepth_net import MonoDepthNet
 from MiDaS.run import run_depth, run_depth_1
 from networks import Inpaint_Color_Net, Inpaint_Depth_Net, Inpaint_Edge_Net
 from utils import get_MiDaS_samples, read_MiDaS_depth
+from utils import path_planning
 from fastapi import FastAPI, File, UploadFile
 import io
 import pydantic
@@ -147,6 +148,20 @@ def predict_(img, effect='circle'):
   border = [int(xx) for xx in [top, down, left, right]]
 
   output_path = os.path.join(config["video_folder"], video_basename[0] + '_' + effect + '.mp4')
+  
+  generic_pose = np.eye(4)
+  tgt_pose = [[generic_pose * 1]]
+  tgts_poses = []
+  for traj_idx in range(len(config['traj_types'])):
+      tgt_poses = []
+      sx, sy, sz = path_planning(config['num_frames'], config['x_shift_range'][traj_idx], config['y_shift_range'][traj_idx],
+                                  config['z_shift_range'][traj_idx], path_type=config['traj_types'][traj_idx])
+      for xx, yy, zz in zip(sx, sy, sz):
+          tgt_poses.append(generic_pose * 1.)
+          tgt_poses[-1][:3, -1] = np.array([xx, yy, zz])
+      tgts_poses += [tgt_poses]    
+  tgt_pose = generic_pose * 1
+  
   normal_canvas, all_canvas = output_3d_photo(
       verts.copy(),
       colors.copy(),
@@ -155,7 +170,7 @@ def predict_(img, effect='circle'):
       copy.deepcopy(Width),
       copy.deepcopy(hFov),
       copy.deepcopy(vFov),
-      copy.deepcopy(effect),
+      copy.deepcopy(tgt_pose),
       'temp',
       copy.deepcopy(np.eye(4)),
       copy.deepcopy(config["video_folder"]),
