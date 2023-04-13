@@ -56,10 +56,12 @@ def predict(img, effect='circle'):
   sample_list = get_MiDaS_samples(config["src_folder"], config["depth_folder"], config, config["specific"])
   normal_canvas, all_canvas = None, None
 
-  if isinstance(config["gpu_ids"], int) and (config["gpu_ids"] >= 0):
-      device = config["gpu_ids"]
-  else:
-      device = "cpu"
+  # if isinstance(config["gpu_ids"], int) and (config["gpu_ids"] >= 0):
+  #     device = config["gpu_ids"]
+  # else:
+  #     device = "cpu"
+
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
   print(f"running on device {device}")
 
@@ -199,9 +201,6 @@ def predict(img, effect='circle'):
       return str(output_path)
 
 app = FastAPI()
-
-class ImageData(pydantic.BaseModel):
-    filename: str
 
 from fastapi.responses import FileResponse
 

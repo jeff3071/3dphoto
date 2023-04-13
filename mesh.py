@@ -2086,11 +2086,14 @@ def write_ply(image,
             
             pbar = tqdm.tqdm(2)
             pbar.set_description("Saving vertices")
+            
             ply_fi.writelines(node_str_list)
+            
             pbar.update(1)
             pbar.set_description("Saving faces")
             
             ply_fi.writelines(str_faces)
+            
             pbar.update(1)
             pbar.close()
             
@@ -2132,6 +2135,8 @@ def read_ply(mesh_fi):
         elif line.startswith('end_header'):
             break
     contents = ply_fi.readlines()
+    ply_fi.close()
+    
     vertex_infos = contents[:num_vertex]
     face_infos = contents[num_vertex:]
     verts = []
