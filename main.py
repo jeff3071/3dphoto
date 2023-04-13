@@ -22,11 +22,14 @@ from boostmonodepth_utils import run_boostmonodepth
 from MiDaS.monodepth_net import MonoDepthNet
 import MiDaS.MiDaS_utils as MiDaS_utils
 from bilateral_filtering import sparse_bilateral_filtering
+import time
+
+start_time = time.time()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='argument.yml',help='Configure of post processing')
 args = parser.parse_args()
-config = yaml.load(open(args.config, 'r'))
+config = yaml.safe_load(open(args.config, 'r'))
 if config['offscreen_rendering'] is True:
     vispy.use(app='egl')
 os.makedirs(config['mesh_folder'], exist_ok=True)
@@ -49,9 +52,18 @@ for idx in tqdm(range(len(sample_list))):
     mesh_fi = os.path.join(config['mesh_folder'], sample['src_pair_name'] +'.ply')
     image = imageio.imread(sample['ref_img_fi'])
 
-    print(f"Running depth extraction at {time.time()}")
+    try:
+        b_channel, g_channel, r_channel, alpha_channel = cv2.split(image)
+        image = cv2.merge((b_channel, g_channel, r_channel))
+    except:
+        pass
+
+    print(f"Running depth extraction at {time.time() - start_time}")
+    start_time = time.time()
     if config['use_boostmonodepth'] is True:
         run_boostmonodepth(sample['ref_img_fi'], config['src_folder'], config['depth_folder'])
+        print(f'boostmonodepth use {time.time()-start_time}')
+        #start_time = time.time()
     elif config['require_midas'] is True:
         run_depth([sample['ref_img_fi']], config['src_folder'], config['depth_folder'],
                   config['MiDaS_model_ckpt'], MonoDepthNet, MiDaS_utils, target_w=640)
@@ -104,7 +116,8 @@ for idx in tqdm(range(len(sample_list))):
         graph = None
 
 
-        print(f"Writing depth ply (and basically doing everything) at {time.time()}")
+        print(f"Writing depth ply (and basically doing everything) at {time.time() - start_time}")
+        #start_time = time.time()
         rt_info = write_ply(image,
                               depth,
                               sample['int_mtx'],
@@ -139,3 +152,4 @@ for idx in tqdm(range(len(sample_list))):
                         image.copy(), copy.deepcopy(sample['int_mtx']), config, image,
                         videos_poses, video_basename, config.get('original_h'), config.get('original_w'), border=border, depth=depth, normal_canvas=normal_canvas, all_canvas=all_canvas,
                         mean_loc_depth=mean_loc_depth)
+    print(f'total time: {time.time() - start_time}')

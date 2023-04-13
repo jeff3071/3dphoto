@@ -16,8 +16,8 @@ def run_boostmonodepth(img_names, src_folder, depth_folder):
         img_names = [img_names]
 
     # remove irrelevant files first
-    clean_folder(os.path.join(BOOST_BASE, BOOST_INPUTS))
-    clean_folder(os.path.join(BOOST_BASE, BOOST_OUTPUTS))
+    #clean_folder(os.path.join(BOOST_BASE, BOOST_INPUTS))
+    #clean_folder(os.path.join(BOOST_BASE, BOOST_OUTPUTS))
 
     tgt_names = []
     for img_name in img_names:

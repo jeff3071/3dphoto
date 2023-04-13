@@ -3,7 +3,8 @@ import copy
 import os
 import time
 from functools import partial
-
+import subprocess
+import shlex
 import cv2
 import imageio
 import numpy as np
@@ -24,8 +25,11 @@ from fastapi import FastAPI, File, UploadFile
 import io
 import pydantic
 
+cmd = "Xvfb :1 -screen 0 1024x768x24 -ac +extension GLX +render -noreset"
+subprocess.Popen(shlex.split(cmd))
+os.environ["DISPLAY"] = ":1"
 
-def predict(img, effect=['circle']):
+def predict(img, effect='circle'):
   config = yaml.safe_load(open("argument.yml", "r"))
   config["offscreen_rendering"] = True
   config["src_folder"] = 'input'
@@ -43,9 +47,7 @@ def predict(img, effect=['circle']):
                            'circle': 'circle',
                            'swing': 'circle'}
 
-  shift_range_dict = {"dolly-zoom-in": [[0.00], [0.00], [-0.05]],
-                      "zoom-in": [[0.00], [0.00], [-0.05]],
-                      "circle": [[-0.015], [-0.015], [-0.05]],
+  shift_range_dict = {"circle": [[-0.015], [-0.015], [-0.05]],
                       "swing": [[-0.015], [-0.00], [-0.05]]}
 
   config["traj_types"] = [traj_types_dict[effect]]
@@ -70,8 +72,10 @@ def predict(img, effect=['circle']):
 
       print(f"Running depth extraction at {time.time()}")
       if config["use_boostmonodepth"] is True:
+          print("run boostmonodepth")
           run_boostmonodepth(sample["ref_img_fi"], config["src_folder"], config["depth_folder"])
       elif config["require_midas"] is True:
+          print("run depth")
           run_depth(
               [sample["ref_img_fi"]],
               config["src_folder"],
@@ -199,11 +203,13 @@ app = FastAPI()
 class ImageData(pydantic.BaseModel):
     filename: str
 
-@app.post("/uploadimage/")
-def create_upload_image(image: UploadFile = File(...)):
+from fastapi.responses import FileResponse
+
+@app.post("/uploadimage/", response_class=FileResponse)
+async def create_upload_image(image: UploadFile = File(...)):
     image_bytes = image.file.read()
-
+    #return 'video/image_circle.mp4'
     img_array = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-
     out = predict(img_array)
-    return {"success": out}
+    
+    return out
