@@ -73,6 +73,18 @@ def predict_(img, effect='circle'):
   os.makedirs(config["mesh_folder"], exist_ok=True)
   os.makedirs(config["video_folder"], exist_ok=True)
   
+  
+  traj_types_dict = {"dolly-zoom-in": "double-straight-line",
+                           'zoom-in': 'double-straight-line',
+                           'circle': 'circle',
+                           'swing': 'circle'}
+
+  shift_range_dict = {"circle": [[-0.015], [-0.015], [-0.05]],
+                      "swing": [[-0.015], [-0.00], [-0.05]]}
+
+  config["traj_types"] = [traj_types_dict[effect]]
+  config["x_shift_range"], config["y_shift_range"], config["z_shift_range"] = shift_range_dict[effect]
+  
   print(f"Running depth extraction")
 
   run_depth_1(
@@ -161,6 +173,7 @@ def predict_(img, effect='circle'):
           tgt_poses[-1][:3, -1] = np.array([xx, yy, zz])
       tgts_poses += [tgt_poses]    
   tgt_pose = generic_pose * 1
+  ref_pose= np.eye(4)
   
   normal_canvas, all_canvas = None, None
   normal_canvas, all_canvas = output_3d_photo(
@@ -172,8 +185,8 @@ def predict_(img, effect='circle'):
       copy.deepcopy(hFov),
       copy.deepcopy(vFov),
       copy.deepcopy(tgt_pose),
-      'temp',
-      copy.deepcopy(np.eye(4)),
+      config['video_postfix'],
+      copy.deepcopy(ref_pose),
       copy.deepcopy(config["video_folder"]),
       image.copy(),
       copy.deepcopy(int_mtx),
