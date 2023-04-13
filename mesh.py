@@ -1817,6 +1817,8 @@ def DL_inpaint_edge(mesh,
     return mesh, info_on_pix, specific_mask_nodes, new_edge_ccs, connnect_points_ccs, np_image
 
 
+import tqdm
+
 def write_ply(image,
               depth,
               int_mtx,
@@ -1826,6 +1828,10 @@ def write_ply(image,
               depth_edge_model,
               depth_edge_model_init,
               depth_feat_model):
+    
+    pbar = tqdm.tqdm(total = 7 if config['extrapolate_border'] is True else 6)
+    pbar.set_description("Creating mesh")
+    
     depth = depth.astype(np.float64)
     input_mesh, xy2depth, image, depth = create_mesh(depth, image, int_mtx, config)
 
@@ -1848,6 +1854,9 @@ def write_ply(image,
 
     mesh, info_on_pix, depth = fill_missing_node(input_mesh, info_on_pix, image, depth)
     if config['extrapolate_border'] is True:
+        pbar.update(1)
+        pbar.set_description("Extrapolating border")
+        
         pre_depth = depth.copy()
         input_mesh, info_on_pix, depth = refresh_bord_depth(input_mesh, info_on_pix, image, depth)
         input_mesh = remove_node_feat(input_mesh, 'edge_id')
@@ -1891,6 +1900,10 @@ def write_ply(image,
                                                 depth_edge_model, depth_feat_model, rgb_model, config, direc="left-up")
         info_on_pix, input_mesh, image, depth, edge_ccs = extrapolate(input_mesh, info_on_pix, image, depth, other_edge_with_id, edge_map, edge_ccs,
                                                 depth_edge_model, depth_feat_model, rgb_model, config, direc="left-down")
+    
+    pbar.update(1)
+    pbar.set_description("Context and holes")
+    
     specific_edge_loc = None
     specific_edge_id = []
     vis_edge_id = None
@@ -1904,6 +1917,10 @@ def write_ply(image,
                                                                                             depth_feat_model,
                                                                                             inpaint_iter=0,
                                                                                             vis_edge_id=vis_edge_id)
+    
+    pbar.update(1)
+    pbar.set_description("Inpaint 1")
+    
     edge_canvas = np.zeros((H, W))
     mask = np.zeros((H, W))
     context = np.zeros((H, W))
@@ -1938,6 +1955,10 @@ def write_ply(image,
                                                                                                             specific_edge_id,
                                                                                                             specific_edge_loc,
                                                                                                             inpaint_iter=0)
+    
+    pbar.update(1)
+    pbar.set_description("Inpaint 2")
+    
     specific_edge_id = []
     edge_canvas = np.zeros((input_mesh.graph['H'], input_mesh.graph['W']))
     connect_points_ccs = [set() for _ in connect_points_ccs]
@@ -1975,6 +1996,10 @@ def write_ply(image,
                                                                                     specific_edge_id,
                                                                                     specific_edge_loc,
                                                                                     inpaint_iter=1)
+    
+    pbar.update(1)
+    pbar.set_description("Reproject mesh")
+    
     vertex_id = 0
     input_mesh.graph['H'], input_mesh.graph['W'] = input_mesh.graph['noext_H'], input_mesh.graph['noext_W']
     background_canvas = np.zeros((input_mesh.graph['H'],
@@ -2030,7 +2055,15 @@ def write_ply(image,
             else:
                 node_str_color.append(str_color)
                 node_str_point.append(str_pt)
+                
+    pbar.update(1)
+    pbar.set_description("Generating faces")
+                
     str_faces = generate_face(input_mesh, info_on_pix, config)
+    
+    pbar.update(1)
+    pbar.close()
+    
     if config['save_ply'] is True:
         print("Writing mesh file %s ..." % ply_name)
         with open(ply_name, 'w') as ply_fi:
@@ -2050,8 +2083,17 @@ def write_ply(image,
             ply_fi.write('element face ' + str(len(str_faces)) + '\n')
             ply_fi.write('property list uchar int vertex_index\n')
             ply_fi.write('end_header\n')
+            
+            pbar = tqdm.tqdm(2)
+            pbar.set_description("Saving vertices")
             ply_fi.writelines(node_str_list)
+            pbar.update(1)
+            pbar.set_description("Saving faces")
+            
             ply_fi.writelines(str_faces)
+            pbar.update(1)
+            pbar.close()
+            
         ply_fi.close()
         return input_mesh
     else:
@@ -2205,7 +2247,7 @@ def output_3d_photo(verts, colors, faces, Height, Width, hFov, vFov, tgt_poses, 
         normal_canvas.reinit_mesh(verts, faces, colors)
         normal_canvas.reinit_camera(fov)
     img = normal_canvas.render()
-    backup_img, backup_all_img, all_img_wo_bound = img.copy(), img.copy() * 0, img.copy() * 0
+    # backup_img, backup_all_img, all_img_wo_bound = img.copy(), img.copy() * 0, img.copy() * 0
     img = cv2.resize(img, (int(img.shape[1] / init_factor), int(img.shape[0] / init_factor)), interpolation=cv2.INTER_AREA)
     if border is None:
         border = [0, img.shape[0], 0, img.shape[1]]
@@ -2231,8 +2273,9 @@ def output_3d_photo(verts, colors, faces, Height, Width, hFov, vFov, tgt_poses, 
     anchor = np.array(anchor)
     plane_width = np.tan(fov_in_rad/2.) * np.abs(mean_loc_depth)
     for video_pose, video_traj_type in zip(videos_poses, video_traj_types):
+        print("\nRendering frames ..")
         stereos = []
-        tops = []; buttoms = []; lefts = []; rights = []
+        # tops = []; buttoms = []; lefts = []; rights = []
         for tp_id, tp in enumerate(video_pose):
             rel_pose = np.linalg.inv(np.dot(tp, np.linalg.inv(ref_pose)))
             axis, angle = transforms3d.axangles.mat2axangle(rel_pose[0:3, 0:3])
