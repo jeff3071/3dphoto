@@ -170,10 +170,10 @@ def predict_(img, effect='circle'):
       tgts_poses += [tgt_poses]    
   tgt_pose = generic_pose * 1
   videos_poses, video_basename = copy.deepcopy(tgts_poses), 'image'
-  output_path = os.path.join(config["video_folder"], 'image_' + effect + '.mp4')
 
+  print(f"traj_types: {config['traj_types']}")
   normal_canvas, all_canvas = None, None
-  normal_canvas, all_canvas = output_3d_photo(
+  normal_canvas, all_canvas, output_path = output_3d_photo(
       verts.copy(),
       colors.copy(),
       faces.copy(),

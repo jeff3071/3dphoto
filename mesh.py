@@ -2337,8 +2337,8 @@ def output_3d_photo(verts, colors, faces, Height, Width, hFov, vFov, tgt_poses, 
         clip = ImageSequenceClip(stereos, fps=config['fps'])
         if isinstance(video_basename, list):
             video_basename = video_basename[0]
-        clip.write_videofile(os.path.join(output_dir, video_basename + '_' + video_traj_type + '.mp4'), fps=config['fps'])
+            
+        out_path = os.path.join(output_dir, video_basename + '_' + video_traj_type + '.mp4')
+        clip.write_videofile(out_path, fps=config['fps'])
 
-
-
-    return normal_canvas, all_canvas
+    return normal_canvas, all_canvas, out_path
