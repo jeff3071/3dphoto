@@ -147,6 +147,8 @@ def predict_(img, effect='circle'):
   border = [int(xx) for xx in [top, down, left, right]]
 
   output_path = os.path.join(config["video_folder"], video_basename[0] + '_' + effect + '.mp4')
+  
+  normal_canvas, all_canvas = None, None
   normal_canvas, all_canvas = output_3d_photo(
       verts.copy(),
       colors.copy(),
