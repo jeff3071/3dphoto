@@ -24,10 +24,14 @@ from utils import get_MiDaS_samples, read_MiDaS_depth
 from fastapi import FastAPI, File, UploadFile
 import io
 import pydantic
+import vispy
 
-cmd = "Xvfb :1 -screen 0 1024x768x24 -ac +extension GLX +render -noreset"
-subprocess.Popen(shlex.split(cmd))
-os.environ["DISPLAY"] = ":1"
+#cmd = "Xvfb :1 -screen 0 1024x768x24 -ac +extension GLX +render -noreset"
+#subprocess.Popen(shlex.split(cmd))
+#os.environ["DISPLAY"] = ":1"
+
+vispy.use(app='egl')
+
 
 def predict(img, effect='circle'):
   config = yaml.safe_load(open("argument.yml", "r"))
