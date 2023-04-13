@@ -162,6 +162,7 @@ def predict_(img, effect='circle'):
       tgts_poses += [tgt_poses]    
   tgt_pose = generic_pose * 1
   
+  normal_canvas, all_canvas = None, None
   normal_canvas, all_canvas = output_3d_photo(
       verts.copy(),
       colors.copy(),
