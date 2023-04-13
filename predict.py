@@ -64,7 +64,7 @@ def load_inpaint_model(config, device):
 def predict_(img, effect='circle'):
   
   img = numpy.array(img)
-  image = img[:, :, ::-1].copy()
+  # image = img[:, :, ::-1].copy()
   
   print("Running 3D Photo Inpainting .. ")
   config = yaml.safe_load(open("argument.yml", "r"))
@@ -170,8 +170,8 @@ def predict_(img, effect='circle'):
       tgts_poses += [tgt_poses]    
   tgt_pose = generic_pose * 1
   videos_poses, video_basename = copy.deepcopy(tgts_poses), 'image'
-
-  print(f"traj_types: {config['traj_types']}")
+  config["video_postfix"] = [effect]
+  
   normal_canvas, all_canvas = None, None
   normal_canvas, all_canvas, output_path = output_3d_photo(
       verts.copy(),

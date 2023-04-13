@@ -70,13 +70,7 @@ def run_depth(img_names, input_path, output_path, model_path, Net, utils, target
 
 
 def run_depth_1(img, output_path, model_path, Net, utils, target_w=None):
-    """Run MonoDepthNN to compute depth maps.
 
-    Args:
-        input_path (str): path to input folder
-        output_path (str): path to output folder
-        model_path (str): path to saved model
-    """
     print("initialize")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -114,16 +108,3 @@ def run_depth_1(img, output_path, model_path, Net, utils, target_w=None):
     utils.write_depth(filename, depth, bits=2)
 
     print("finished")
-
-# if __name__ == "__main__":
-#     # set paths
-#     INPUT_PATH = "image"
-#     OUTPUT_PATH = "output"
-#     MODEL_PATH = "model.pt"
-
-#     # set torch options
-#     torch.backends.cudnn.enabled = True
-#     torch.backends.cudnn.benchmark = True
-
-#     # compute depth maps
-#     run_depth(INPUT_PATH, OUTPUT_PATH, MODEL_PATH, Net, target_w=640)
