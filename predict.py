@@ -64,7 +64,7 @@ def load_inpaint_model(config, device):
 def predict_(img, effect='circle'):
   
   img = numpy.array(img)
-  # image = img[:, :, ::-1].copy()
+  image = img[:, :, :].copy()
   
   print("Running 3D Photo Inpainting .. ")
   config = yaml.safe_load(open("argument.yml", "r"))
