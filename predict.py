@@ -206,14 +206,33 @@ def predict(img, effect='circle'):
 app = FastAPI()
 
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from typing import Optional
+import json
+from fastapi import Body
+
+class Params(BaseModel):
+    effect: str
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_to_json
+
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
 
 @app.post("/uploadimage/", response_class=FileResponse)
-async def create_upload_image(image: UploadFile = File(...)):
+async def create_upload_image(params: Params = Body(...),image: UploadFile = File(...)):
+    print(params)
     image_bytes = image.file.read()
     img_array = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    out = predict(img_array)
+    out = predict(img_array, params.effect)
         
     return out
+
 
 if __name__ == "__main__":
   start_time = time.time()
